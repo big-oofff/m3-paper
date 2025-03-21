@@ -1,0 +1,791 @@
+\documentclass{article}
+\DeclareUnicodeCharacter{208D}{\textsubscript{(}}
+\usepackage[utf8]{inputenc}
+\usepackage{textgreek}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{ifthen} % for alternate font checking
+\usepackage[margin=1in]{geometry} % for changing the page margins, etc.
+\usepackage{graphicx} % Required for inserting images
+\usepackage{xcolor} % for coloring text
+\usepackage{soul} % for highlighting text
+\usepackage{amsmath} % for useful math environments
+\usepackage{array} % makes for better looking tables
+\usepackage{multirow} % for tables with cells that span rows/columns
+\usepackage{fancyhdr} % for fancy headers and footers
+\usepackage{verbatim} % helps when writing LaTeX commands              
+% that you want to appear in the text
+\usepackage{tocloft} % for customizing the table of contents
+\usepackage{url}  % this helps with citing urls in the bibliography
+\usepackage{listings}
+
+%%% 
+%% Alternate Fonts
+%% Uncomment this section to use the Google Open Font Carlito
+%% which is similiar to Microsoft's Calibri.
+%% Other fonts are avialable.
+%% To use in Overleaf, click on Menu in the upper left.
+%% Then change Compiler to XeLaTeX.
+\ifthenelse{\boolean{xetex}}%
+	{\sffamily
+	%%\usepackage{fontspec}
+	\usepackage{mathspec}
+	\setallmainfonts[Mapping=tex-text]{Carlito}
+	\setmainfont[Mapping=tex-text]{Carlito}
+	\setsansfont[Mapping=tex-text]{Carlito}
+	\setmathsfont(Greek){[cmmi10]}
+        % other fonts format the TeX and LaTeX logos oddly based on spacing.
+        % This is designed to make the Carlito font look ok.
+	\renewcommand{\TeX}{T\kern-.1667em \lower.5ex\hbox{E} \kern-.25em X}
+        \renewcommand{\LaTeX}{L\kern-.2em\raise.3ex\hbox{\sc A}\kern-.1em\TeX}
+        }
+	{}
+%%%% Ends comment on alternate fonts
+
+
+\begin{document}
+\thispagestyle{empty}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[L]{Page \thepage}
+%% ENTER YOUR TEAM NUMBER BELOW
+\fancyhead[R]{Team \# \hl{17447} }
+
+\begin{center}
+
+\Huge{\textbf{M3 Challenge 2025}}
+\section*{Hot Button Issue: \textit{Staying Cool as the World Heats Up}}
+
+\subsection*{Team \#17447}
+\subsection*{March 2, 2025}
+\end{center}
+
+\clearpage
+
+\begin{center}
+    \Huge \textbf{Executive Summary}
+\end{center}
+Extreme heat events pose significant risks to urban populations, particularly vulnerable communities with limited access to cooling resources. This study presents a comprehensive approach to modeling heat vulnerability, indoor temperature fluctuations, and electricity demand forecasting in Memphis, Tennessee, during heat waves. Our work is divided into three key models: (1) predicting indoor temperatures in non-air-conditioned dwellings, (2) estimating peak electricity demand for Memphis over the next 20 years, and (3) developing a vulnerability index for identifying at-risk neighborhoods.
+
+To model indoor temperatures, we employed a recursive thermal model incorporating outdoor temperature fluctuations, humidity, solar radiation, and building materials. Our results indicate that indoor temperatures lag behind outdoor temperatures and peak later in the day, with homes reaching up to 107.54°F at 2 PM, exceeding outdoor temperatures by 5.52°F. This finding underscores the risks of prolonged heat exposure in non-air-conditioned homes.
+
+For peak electricity demand, we developed statistical models integrating climate projections, demographic trends, and energy efficiency improvements. Our random forest regression model achieved an R² of 0.9843, identifying heat wave intensity and high temperature as dominant predictors. Under a moderate climate scenario, Memphis's peak electricity demand is projected to increase by 28 percent to 3680.4 MW over the next 20 years, with population growth as the largest contributing factor (+17.6 percent impact).
+
+Finally, we constructed a vulnerability index using ridge regression, incorporating elderly population, household count, and median income as key factors. Our model ranks neighborhoods by vulnerability, enabling targeted resource allocation. Areas such as South Memphis, Frayser, and Uptown exhibited the highest vulnerability scores, while Collierville and Germantown had the lowest risk. These results provide actionable insights for policymakers to implement cooling centers, urban greening initiatives, and financial assistance for air conditioning access.
+
+Overall, our integrated modeling approach provides a data-driven framework for heat wave mitigation. Our findings emphasize the urgent need for infrastructure planning, targeted interventions, and climate resilience strategies to protect vulnerable populations from rising temperatures.
+
+\clearpage
+
+\section*{$\mathbf{Q1}$: Hot to Go}
+\subsection*{1.1 Defining the Problem}
+The first problem asks us to develop a model to predict the indoor temperature of a non-air-conditioned dwelling over 24 hours during a heat wave. Our model will predict how the indoor temperature of Memphis, Tennessee, fluctuates based on outdoor conditions and dwelling characteristics.
+
+\subsection*{1.2 Assumptions}
+\subsubsection*{1.2-1. Human interaction with the indoor environment is minimal}
+\begin{itemize}
+    \item \textbf{Justification:} The model assumes that occupants do not actively regulate indoor temperatures by opening windows, using blinds, or adjusting ventilation. This ensures a consistent analysis of the passive heat transfer mechanism and overall effects of the outside environment without external impacts.
+\end{itemize}
+
+\subsubsection*{1.2-2. All dwellings have uniform structural characteristics}
+\begin{itemize}
+    \item \textbf{Justification:} There are an equal number of doors and windows with uniform dimensions and thermal mass characteristics such as material composition.
+\end{itemize}
+
+\subsubsection*{1.2-3. The representative dwelling size is 1354.5 square feet}
+\begin{itemize}
+    \item \textbf{Justification:} This value serves as a baseline for thermal mass and heat retention calculations, representing the average size of dwellings included in the dataset\textsuperscript{[1]}. 
+\end{itemize}
+
+\subsubsection*{1.2-4. The year of construction and natural shading effects are negligible}
+\begin{itemize}
+    \item \textbf{Justification:} While older buildings and shaded areas may exhibit different thermal properties, this model assumes that variations in construction age and shading do not significantly impact overall heat retention or dissipation. 
+\end{itemize}
+
+\subsubsection*{1.2-5. Weather and climate conditions remain consistent across the city.}
+\begin{itemize}
+    \item \textbf{Justification:} The model assumes uniform atmospheric conditions throughout the study area, ensuring that all dwellings experience identical outdoor temperatures and climatic factors.
+\end{itemize}
+
+\subsubsection*{1.2-6. Artificial cooling mechanisms are absent.}
+\begin{itemize}
+    \item \textbf{Justification:} The model excludes the influence of fans, air conditioning, and other active cooling methods, focusing solely on passive temperature fluctuations. 
+\end{itemize}
+
+\subsubsection*{1.2-7. \textbf{Houses are primarily constructed from wood.}}
+\begin{itemize}
+    \item \textbf{Justification:} A large percentage of American homes are constructed from wood\textsuperscript{[2]}. Additionally, wood has a lower thermal conductivity compared to materials like concrete or steel, making it a natural insulator\textsuperscript{[3]}.
+\end{itemize}
+\subsubsection*{1.2-8. \textbf{\textbf{Windows are multi-paned. }}}
+\begin{itemize}
+    \item \textbf{Justification:} A large percentage of windows in American homes are multi-paned\textsuperscript{[4]}.
+\end{itemize}
+\subsection*{1.3 Variables and Constants}
+\clearpage
+\begin{table}
+\centering
+
+\begin{tabular}{| l | l | l | l |}
+\hline
+Symbol & Variable & Unit & Value \\
+\hline
+Tout & Outdoor Temperature & °C & Given list \\
+\hline
+Tin & Indoor Temperature & °F & Computed \\
+\hline
+H & Humidity & \% & Given list \\
+\hline
+thermal\_mass & Thermal Mass Factor & N/A & 0.2 \\
+\hline
+window\_factor & Window Exposure Factor & N/A & 0.76 \\
+\hline
+wood\_factor & Wood Insulation Factor & N/A & 0.3 \\
+\hline
+solar\_effect & Solar Heat Influence & N/A & Computed \\
+\hline
+
+\end{tabular}
+\caption{Table of Variables and Constant.}
+\label{tab:my_table}
+\end{table}
+
+\subsection*{1.4 Model}
+\subsubsection*{1.4-1. Model Development}
+
+Our team developed a simulation to model the change in indoor temperatures during a 24-hour heat wave, incorporating key factors such as thermal mass, window exposure, solar radiation, and humidity effects. The model follows a recursive approach, where each indoor temperature value depends on the previous one. Given this, a recursive approach is more appropriate than linearization, as it better reflects the gradual accumulation of heat over time, which is crucial for understanding the effects of prolonged heat exposure. The diurnal cycle of temperature changes, with its inherent nonlinearity, further emphasizes the need for such a model.
+
+Heat flow through building materials follows conductive heat transfer, where temperature differences and insulation properties dictate the rate of heat exchange. Greater temperature differentials accelerate heat transfer, influencing indoor temperature fluctuations.
+
+Solar radiation, a major heat source, is modeled with a sinusoidal function peaking between 12:00 PM and 2:00 PM, ensuring high granularity in capturing its impact. Thermal inertia, the delayed indoor response to outdoor changes, is incorporated by accounting for material-specific heat retention. Buildings with higher thermal mass experience a time lag in temperature shifts, with indoor peaks occurring later than outdoor ones.
+
+Thermal inertia is a key factor in temperature dynamics within buildings, referring to the delayed response of interior temperatures to external fluctuations. Materials like brick have higher thermal mass than wood, storing heat longer. Our model accounts for this delay by incorporating material-specific properties that influence heat retention, causing a time lag between outdoor and indoor temperature shifts.
+
+This time lag is especially pronounced in buildings with substantial thermal mass, where absorbed heat is released gradually, leading to a delayed indoor warming effect. We incorporated this lag into our model to accurately reflect the slower rise in indoor temperatures as heat accumulates throughout the day.
+
+Humidity also affects indoor temperatures, influencing thermal comfort and heat retention. We included a humidity effect parameter that adjusts indoor temperatures based on relative humidity and dew point, refining the model's representation of heat perception and temperature regulation. This ensures the model accounts for increased heat retention at higher moisture levels.
+
+\subsubsection*{1.4-2 Executing the Model}
+
+Our team used the provided 24-hour heat wave data of Memphis, Tennessee, USA. The model takes in five primary parameters including the outdoor temperature.
+
+\begin{enumerate}
+    \item Humidity affects heat retention and perceived temperature, with higher humidity slowing heat dissipation, making indoor environments feel warmer. Our model adjusts indoor temperatures using relative humidity, the temperature difference, and the deviation between outdoor temperature and the dew point. 
+    \item Thermal mass is a material’s ability to absorb and release heat. We use a 0-1 scale, where higher values indicate more thermal mass. Materials like brick and concrete have higher values than wood and metal. For wood-frame houses, we settled on a value of 0.2. 
+    \item The window factor reflects the Solar Heat Gain Coefficient (SHGC), which measures how much solar radiation passes through a window, door, or skylight\textsuperscript{[5]}. Following our assumption of 1.2-8. Windows are multi-paned; we used the known SHGC value of 0.76. 
+    \item The wood factor represents the insulating properties of wood, which resists heat flow but doesn't store or release heat as efficiently as high-density materials. Based on typical wood-frame houses, we chose a value of 0.3.
+\end{enumerate}
+
+The newly calculated temperature stems from the following equation:
+\begin{equation}
+    \text{new\_temp} = \text{prev\_temp} + (\text{temp\_diff} \times \text{adjusted\_thermal\_mass}) + (\text{solar\_effect} \times \text{temp\_diff}) + \text{humidity\_effect} 
+    \label{eq:temperature_model}
+\end{equation}
+The adjusted thermal mass is calculated by multiplying the thermal mass by (1 + the wood factor).
+
+The dew point is calculated using the Magnus formula, an empirical relationship that estimates the dew point temperature in Celsius from air temperature and relative humidity. The Magnus formula is:
+\begin{equation}
+    \alpha = \frac{a \cdot T}{b + T} + \ln\left(\frac{RH}{100}\right)
+    \label{eq:alpha_equation}
+\end{equation}
+\begin{equation}
+    T^M = \frac{b \cdot \alpha}{a - \alpha}
+    \label{eq:custom_equation}
+\end{equation}
+where a = 17.27 and b = 237.7, values commonly used in meteorology for estimating the dew point over typical temperature and humidity ranges. RH symbolizes the relative humidity as a percentage. The alpha is the intermediate variable which is used to solve for the dew point\textsuperscript{[6]}.
+
+This calculation is performed iteratively for each hour from 12:00 AM to 11:00 PM, simulating how the building's interior temperature changes throughout 24 hours in response to outdoor temperature variations, solar radiation, humidity, and the building’s thermal properties. The process is repeated for all 24 hours, providing a full day’s worth of temperature data based on the given parameters.
+
+\subsection*{1.5 Results}
+
+Using our simulation model developed in the previous section, we estimated the indoor temperature of dwellings in Memphis, Tennessee over 24 hours in Python. Below is the graph of our simulation model for the 24 hours.
+\begin{figure}[h]
+    \label{fig:Predictive Indoor Temperature of Memphis, Tennessee}
+    \centering
+    \includegraphics[width=0.5\linewidth]{Predictive Indoor Temperature of Memphis, Tennessee.png}
+    \vskip 10pt
+    \parbox{0.5\linewidth}{This graph illustrates the temperature of the interior of the house in Fahrenheit in the 24 hours.}
+    
+\end{figure}
+
+\subsection*{1.6 Discussion}
+
+For Memphis, our model estimates that indoor temperatures in a non-air-conditioned dwelling will follow the pattern influenced by outdoor temperature fluctuations. Based on the data, indoor temperature peaks at 107.541°F at 2 PM, exceeding the outdoor temperature of 102.02°F by 5.521°F. The temperature difference reaches its maximum at 7 PM, where the indoor temperature remains elevated at 101.517°F while the outdoor temperature drops to 93.92°F, resulting in a 7.597°F disparity. This suggests that heat accumulates indoors throughout the day due to thermal mass and limited ventilation. As outdoor temperatures decrease overnight, indoor temperatures decline but remain slightly higher due to residual heat. From this, we can conclude that indoor temperatures in non-air-conditioned homes lag behind outdoor temperatures, with heat retention prolonging elevated temperatures even as external conditions cool.
+
+\subsection*{1.7 Sensitivity Analysis}
+
+To determine the accuracy of our predictions, we randomly offset each data point by up to 5\% and then ran the model again to get a new prediction. We calculated the percent difference between the original prediction and the new prediction. This process was repeated 100 times, with the results averaged to provide a robust measure of our model's sensitivity to input variations.
+\begin{figure}[h]
+    \label{fig:Indoor Temperature Prediction Sensitivity Analysis}
+    \centering
+    \includegraphics[width=0.5\linewidth]{Indoor_Temperature_Prediction_Sensitivity_Analysis.PNG}
+    \vskip 10pt
+    \parbox{0.5\linewidth}{This graph reflects the percent difference between the original prediction and the new prediction after a 5 percent adjustment.}
+    
+\end{figure}
+
+\begin{figure}[h]
+    \label{fig:Percent Error by Hour}
+    \centering
+    \includegraphics[width=0.5\linewidth]{Percent_Error_by_Hour.PNG}
+    \vskip 10pt
+    \parbox{0.5\linewidth}{This chart shows the percent error by hour}
+ 
+\end{figure}
+The analysis shows that our model is most stable during morning hours when temperature changes are minimal. The highest sensitivity occurs during evening hours when the indoor-outdoor temperature differential is greatest, with percent errors approaching 0.4\%. Notably, the percent error trends upward throughout the day, suggesting that cumulative effects of thermal mass and humidity create increasing uncertainty in longer-term predictions. However, the overall average jittered variation of 0.1\% indicates that our model maintains good resilience to random error.
+
+Our confidence intervals remain relatively narrow throughout the 24 hours, with standard deviations averaging less than 2°F. This further supports our model's stability when exposed to small variations in input parameters.
+
+\subsection*{1.8 Strengths and Weaknesses}
+
+\subsection*{Strengths}
+
+Our simulation models daytime heating and nighttime cooling since the model accounts for solar influence during daylight hours. In addition, our simulation model acknowledges that indoor temperature does not change instantaneously, since indoor temperature responds gradually to outdoor conditions. Finally, the effect of insulation materials is included, making it adaptable to different building structures.
+
+\subsection*{Weakness}
+
+The model may overestimate peak indoor temperatures due to several simplifying assumptions. It assumes constant weather conditions and no external cooling, which could lead to higher indoor temperatures than would occur in real conditions. Additionally, the fixed solar radiation pattern does not account for variables like cloud cover, shading, or seasonal changes, potentially overestimating solar heat gains. The model also treats the building as a uniform thermal mass, neglecting differences in room orientations, airflow patterns, and heat dissipation through ventilation. These factors can cause localized temperature variations that the current model does not capture.
+
+
+
+\section*{$\mathbf{Q2}$: Power Hungry}
+\subsection*{2.1 Defining the Problem}
+Develop a model that predicts the peak demand that Memphis's power grid should be prepared to handle during the summer months. Forecast changes in the maximum demand 20 years from now, accounting for key influencing factors.
+
+\subsection*{2.2 Assumptions}
+\subsubsection*{2.2-1 Population density directly correlates with increased air conditioning demand.}
+\begin{itemize}
+    \item \textbf{Justification:} Urban heat island effects in Memphis intensify cooling needs in dense areas, creating more anthropogenic heat and requiring greater HVAC capacity per square foot\textsuperscript{[7]}\textsuperscript{[8]}.
+\end{itemize}
+
+\subsubsection*{2.2-2 Air conditioning penetration will approach saturation with minimal growth.}
+\begin{itemize}
+    \item \textbf{Justification:} 
+Memphis's AC penetration rate is approximately 90\%, with remaining adoption primarily limited by structural or financial barriers in older buildings and disadvantaged areas.
+
+\end{itemize}
+
+\subsubsection*{2.2-3 Home insulation characteristics remain relatively constant across the forecast period.}
+\begin{itemize}
+    \item \textbf{Justification:} 
+Memphis homes use fiberglass (R-value 48), open-cell spray foam (R-value 42.6), and closed-cell spray foam (R-value 75). High upgrade costs and long lifecycles (20-30 years) minimize turnover within the forecast window.
+
+\end{itemize}
+
+\subsubsection*{2.2-4 Energy efficiency improvements follow established technological and regulatory trajectories.}
+\begin{itemize}
+    \item \textbf{Justification:} 
+HVAC efficiency gains follow predictable S-curves driven by federal standards and market competition, allowing reliable extrapolation through the forecast period.
+
+\end{itemize}
+
+\subsubsection*{2.2-5 Electricity price elasticity has minimal impact on peak demand patterns.}
+\begin{itemize}
+    \item \textbf{Justification:} 
+Residential cooling shows low short-term price elasticity (-0.2 to -0.4), particularly during extreme heat events when health concerns override cost considerations\textsuperscript{[9]}.
+
+\end{itemize}
+
+\subsubsection*{2.2-6 Renewable energy adoption patterns remain stable through the forecast period.}
+\begin{itemize}
+    \item \textbf{Justification:} 
+High initial costs (\$15,000-\$25,000) and long payback periods (7-12 years) for residential solar create barriers to rapid adoption shifts without transformative policy intervention\textsuperscript{[10]}.
+
+\end{itemize}
+
+\subsection*{2.3 Variables}
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|l|c|}
+        \hline
+        \textbf{Symbol} & \textbf{Variable} & \textbf{Unit} \\ 
+        \hline
+        $HS$ & Household Size  & sq ft \\ 
+        \hline
+        $I$ & Median Household Yearly Income & USD \\ 
+        \hline
+        $P$ & Population & amount of residents over time  \\ 
+        \hline
+        $EC$ & Electricity Consumption & MW \\ 
+        \hline
+        $T$ & Temperature & °F \\ 
+       \hline
+       $D$ & Dew Point & °F \\ 
+       \hline
+       $H$ & Humidity & percentage \\ 
+       \hline
+       $MT$ & Maximum Annual Temperature & °F \\ 
+       \hline
+       $PD$ & Peak Electricity Demand & MW \\ 
+       \hline
+       $t$ & Time Period & years \\ 
+       \hline
+    \end{tabular}
+    \caption{Variables in Vulnerability Scoring}
+    \label{tab:variables}
+\end{table}
+\subsection*{2.4 The Model}
+
+Our approach integrates statistical modeling with thermodynamic principles through four components: Statistical Power Demand Analysis, Thermodynamic Energy Modeling, Scenario Development, and Sensitivity Analysis.
+
+For Statistical Power Demand Analysis, we implemented two complementary models. First, a Linear Regression Model established baseline relationships: 
+\begin{equation}
+    PD = \beta_{0} + \beta_{1}T + \beta_{2}P + \beta_{3}ACP + \beta_{4}CDD + \epsilon
+    \label{eq:linear_model}
+\end{equation}
+where PD represents Peak demand (MW), T is Temperature (°F), P denotes Population, ACP is Air conditioning penetration (\%), and CDD stands for Cooling degree days. This model provided strong predictive power (R² of 0.9123), which we enhanced with a Random Forest Model (\(PD = f(T, P, H, ACP, CDD, HW)\)) to better capture non-linear relationships, achieving superior performance (R² of 0.9843).
+
+Our thermodynamic model calculates cooling energy as the difference between outdoor and indoor temperatures: \(E(T) = k × (T₍outside₎ - 72)\), where k is an efficiency coefficient dependent on home insulation, air conditioner efficiency, and home characteristics. To account for efficiency improvements, we implemented a time-dependent coefficient: \((k(t) = k₀ × (1 - t/20 ×  0.15)\) where 0.15 represents Efficiency Improvement). 
+Crucially, we developed a heat wave intensity factor \((1.0 + 0.02 × max(0, Temperature - 95)²)\) to capture the disproportionate impact of extreme heat events on peak demand.
+
+To address future uncertainties, we developed three distinct scenarios with varying assumptions about climate change, population growth, technology adoption, and efficiency improvements:
+
+\begin{itemize}
+    \item Baseline Scenario: 1.0°F temperature increase, 0.8\% annual population growth, 5\% AC penetration increase, 10\% efficiency improvement
+    \item Moderate Scenario: 2.0°F temperature increase, 1.0\% annual population growth, 8\% AC penetration increase, 15\% efficiency improvement
+    \item High Impact Scenario: 3.5°F temperature increase, 1.2\% annual population growth, 10\% AC penetration increase, 20\% efficiency improvement
+\end{itemize}
+
+Our comprehensive framework for projecting future peak demand integrates all components: 
+\[PD(t+20) = PD(t) × (1 + \Delta{\text{Temp}} * \beta T) × (1 + \Delta \text{Pop} * \beta P) × (1 + \Delta \text{AC} * \beta A) × (1 - \Delta \text{Eff} * \beta E)\]
+where PD(t+20) is the projected peak demand in 20 years, PD(t) is the current peak demand (2875.3 MW), and the \(Δ\) terms represent changes in key variables with their corresponding sensitivity coefficients derived from our regression models.
+
+\subsection*{2.5 Results}
+\subsubsection*{2.5-1 Feature Analysis}
+\begin{table}[h]
+\centering
+
+\begin{tabular}{| l | l | l |}
+\hline
+Factor & Correlation with Peak Demand & Importance (Random Forest) \\
+\hline
+Heat Wave Factor & 0.953818 & 0.365095 \\
+\hline
+High Temperature & 0.652801 & 0.574877 \\
+\hline
+Cooling Degree Days & 0.589198 & 0.020194 \\
+\hline
+Average Temperature & 0.589198 & 0.022091 \\
+\hline
+AC Penetration & 0.037743 & 0.009033 \\
+\hline
+Population & 0.037743 & 0.008710 \\
+\hline
+
+\end{tabular}
+\caption{Temperature-related factors (heat wave intensity and high temperature) emerged as the dominant predictors, collectively accounting for approximately 94\% of the model's predictive power.}
+\label{tab:my_table}
+\end{table}
+
+
+\subsubsection*{2.5-2 Temperature Sensitivity}
+Our analysis quantified Memphis's temperature sensitivity at two levels:
+\begin{itemize}
+    \item \textbf{Direct Linear Sensitivity:} 7.09 MW/°F near current peak temperature (94.0°F)
+    \item \textbf{Effective Temperature Impact:} 20.15 MW/°F when accounting for non-linear heat wave effects
+\end{itemize}
+
+This substantial difference (184\% higher effective sensitivity) demonstrates the critical importance of modeling non-linear temperature effects when planning for climate change impacts.
+
+\subsubsection*{2.5-3 Cooling Requirements}
+Based on our thermodynamic model and projected temperature increases:
+\begin{table}[h]
+\centering
+
+\begin{tabular}{| l | l | l | l |}
+\hline
+Scenario & Current Cooling Requirement & Future Cooling Requirement & Change \\
+\hline
+Baseline & 22.0°F & 23.0°F & +1.0°F \\
+\hline
+Moderate & 22.0°F & 24.0°F & +2.0°F \\
+\hline
+High Impact & 22.0°F & 25.5°F & +3.5°F \\
+\hline
+
+\end{tabular}
+\caption{These increased cooling requirements translate directly to higher energy demand, even as efficiency improvements partially offset the impact.}
+\label{tab:my_table}
+\end{table}
+
+\subsubsection*{2.5-4 Energy Efficiency Impact}
+Our model projects efficiency improvements will partially mitigate increased cooling needs:
+\begin{table}
+\centering
+
+\begin{tabular}{| l | l |}
+\hline
+Scenario & Energy Consumption Change \\
+\hline
+Baseline & -5.9\% \\
+\hline
+Moderate & -7.3\% \\
+\hline
+High Impact & -7.3\% \\
+\hline
+
+\end{tabular}
+\caption{These figures represent per-unit efficiency gains, not total consumption, which is still projected to increase due to higher cooling requirements and population growth.}
+\label{tab:my_table}
+\end{table}
+
+\begin{figure}[h]
+    \label{fig:Waterfall Chart of Factors Contributing to Peak Demand Change}
+    \centering
+    \includegraphics[width=0.5\linewidth]{demand_factors_waterfall.png}
+    \caption{This waterfall chart illustrates the individual contribution of each factor to the projected increase in Memphis's summer peak power demand over the next 20 years under the moderate scenario. }
+    \vskip 10pt
+    \parbox{0.5\linewidth}
+    
+\end{figure}
+Starting from the current peak of 2875.3 MW, the chart shows how base growth (+287.5 MW), temperature increase (+40.3 MW), population growth (+506.5 MW), AC penetration increase (+69.0 MW), efficiency improvements (-172.5 MW), and other factors (+74.3 MW) combine to reach the projected future peak of 3680.4 MW, representing a total increase of 28\%.
+
+\subsubsection*{2.5-5 Peak Demand Projections}
+Our 20-year projections for Memphis's summer peak power demand:
+\begin{table}[h]
+\centering
+
+\begin{tabular}{| l | l | l | l |}
+\hline
+Scenario & Temperature Increase & Projected Peak (MW) & Change (\%) \\
+\hline
+Baseline & 1.0°F & 3477.35 & 22.00\% \\
+\hline
+Moderate & 2.0°F & 3680.4 & 28.00\% \\
+\hline
+High Impact & 3.5°F & 3819.39 & 34.00\% \\
+\hline
+
+\end{tabular}
+\caption{The moderate scenario, which we consider most likely, projects a 28.00\% increase from the current peak of 2875.3 MW.}
+\label{tab:my_table}
+\end{table}
+
+
+\begin{figure}[h]
+    \label{fig:Scenario Comparison of 20-Year Projections}
+    \centering
+    \includegraphics[width=0.5\linewidth]{forecast_peak_demand.png}
+    \caption{Bar chart comparing projected scenarios for Memphis's summer peak power demand: baseline (22\% increase to 3477.35 MW), moderate (28\% increase to 3680.4 MW), and high-impact (34\% increase to 3819.39 MW) against current demand of 2850.29 MW.}
+    \vskip 10pt
+    \parbox{0.5\linewidth}
+    
+\end{figure}
+\clearpage
+\subsubsection*{2.5-6 Contributing Factors}
+For the moderate scenario (28.00\% increase), we decomposed the contributions:
+\begin{table}[h]
+\centering
+
+\begin{tabular}{| l | l | l |}
+\hline
+Factor & Contribution (MW) & Percentage of Current Peak \\
+\hline
+Base Growth & 287.5 & 10.0\% \\
+\hline
+Temperature Increase & 40.3 & 1.4\% \\
+\hline
+Population Growth & 506.5 & 17.6\% \\
+\hline
+AC Penetration Increase & 69.0 & 2.4\% \\
+\hline
+Efficiency Improvement & -172.5 & -6.0\% \\
+\hline
+Other Factors & 74.3 & 2.6\% \\
+\hline
+\end{tabular}
+\caption{Population growth emerges as the dominant driver (17.6\%), while efficiency improvements provide the largest mitigating effect (-6.0\%).}
+\label{tab:my_table}
+\end{table}
+
+
+
+\subsubsection*{2.5-7 Visualization Results}
+\begin{figure}[h]
+    \label{fig:Relationship Between Temperature (°F) and Peak Demand}
+    \centering
+    \includegraphics[width=0.75\linewidth]{temperature_demand_relationship.png}
+    \caption{Scatter plot with regression curve demonstrating non-linear relationship between summer temperatures and peak power demand, with pronounced curve above 90°F illustrating disproportionate impact of extreme heat events.}
+    \vskip 10pt
+    \parbox{0.5\linewidth}
+    
+\end{figure}
+
+
+\subsection*{2.6 Discussion}
+\subsubsection*{2.6-1 Temperature Sensitivity and Climate Change}
+The strong relationship between temperature and peak demand (correlation of 0.953818 for heat wave factor) underscores Memphis's grid vulnerability to climate change. The non-linear relationship becomes pronounced above 95°F, suggesting even modest temperature increases will have disproportionate impacts.
+
+\subsubsection*{2.6-2 Population as Primary Driver}
+Population growth (17.6\% contribution) represents the largest driver of increased peak demand, significantly higher than direct temperature effects (1.4\%). This finding has important implications for urban planning and suggests residential energy efficiency programs could provide outsized benefits.
+
+\subsubsection*{2.6-3 Efficiency as Mitigation Strategy}
+Efficiency improvements (-6.0\% contribution) partially offset increased demand but cannot eliminate the need for additional capacity. A balanced approach combining efficiency, capacity expansion, and demand management is required.
+
+\subsubsection*{2.6-4 Heat Wave Vulnerability}
+\begin{figure}
+    \label{fig:Historical Summer Peak Demand for Memphis}
+    \centering
+    \includegraphics[width=0.5\linewidth]{historical_peak_demand.png}
+    \caption{Line graph displaying historical summer peak demand data for Memphis, showing fluctuations between 2400 MW and 3500 MW with gradual upward trajectory and notable spikes during particularly hot summers.}
+    
+    \vskip 10pt
+    \parbox{0.5\linewidth}
+    
+\end{figure}
+The calculated heat wave factor (with quadratic growth above 95°F) highlights Memphis's vulnerability to extreme heat events. During a simulated 7-day heat wave, peak demand spikes by approximately 175.6\% over normal summer levels, highlighting the importance of contingency planning beyond average conditions.
+
+
+\subsection*{2.7 Strengths and Weaknesses}
+
+\subsection*{Strengths}
+Our approach boasts several key strengths that contribute to its robustness and reliability. The comprehensive modeling framework integrates statistical analysis with physics-based energy modeling, providing both empirical validation and theoretical foundations for projections. This integration allows for a more nuanced understanding of the complex factors influencing energy demand. The incorporation of non-linear temperature modeling, specifically through the heat wave intensity factor, captures the disproportionate impact of extreme temperatures on peak demand, which simple linear models often fail to account for. Our approach also acknowledges future uncertainty through multiple scenario planning, offering three distinct scenarios that provide actionable ranges for infrastructure planning. The high model accuracy, demonstrated by an R² of 0.9843 for our random forest model, showcases exceptional explanatory power for a complex system. Additionally, the detailed breakdown of contributing factors provides clear guidance for prioritizing interventions, enhancing the model's practical applicability.
+
+\subsection*{Weaknesses}
+ Despite its strengths, our approach does have some limitations that should be acknowledged. The inherent uncertainty in climate change projections could affect forecast accuracy, even though we model three temperature scenarios. Our demographic modeling is simplified, assuming uniform population growth rather than accounting for potential demographic shifts or migration patterns that could impact consumption patterns. The model's ability to capture future technological innovations in cooling, smart grid management, or distributed energy resources is limited, which could lead to unforeseen alterations in demand patterns. The static efficiency assumptions may not accurately reflect the complex interplay of policy changes, economic factors, and technological advancements over time. Lastly, while our model accounts for average summer temperature increases, it may not fully capture the increased frequency of extreme heat events, which could have significant impacts on peak demand.
+
+
+ \subsection*{2.8 Recommendations}
+ Based on our analysis, we recommend planning infrastructure for a 28\% increase in summer peak demand (3680.4 MW), with contingencies for higher scenarios. Prioritize residential efficiency programs in high-growth areas and develop heat wave response protocols to manage potential 175\% demand spikes. Update building codes for improved insulation and cooling efficiency, while implementing distributed energy resources, focusing on rooftop solar and storage. Modernize grid infrastructure with smart technologies for dynamic load management and establish programs to protect vulnerable populations during heat waves. Finally, conduct annual forecast updates incorporating the latest climate science, demographics, and technology trends to ensure adaptive energy planning.
+
+
+
+
+
+
+
+\section*{$\mathbf{Q3}$: Beat the Heat}
+\subsection*{3.1 Defining the Problem}
+Extreme heat events, particularly in the presence of power grid failures, pose a severe risk to urban populations. Memphis city officials seek a data-driven vulnerability score to identify at-risk neighborhoods and allocate resources effectively. This model integrates various factors that best captures risk effects.
+\subsection*{3.2 Assumptions}
+\subsubsection*{3.2-1. Vulnerability is linear}
+\begin{itemize}
+    \item \textbf{Justification:} 
+    Vulnerability can be calculated linearly because its contributing factors—such as elderly population and income—exert proportional and independent influences on heat-related risk, making a weighted sum an effective approximation of overall vulnerability.
+\end{itemize}
+
+\subsubsection*{3.2-2. There are no other independent factors besides elderly population, number of households, and median household income that significantly impact vulnerability}
+\begin{itemize}
+    \item \textbf{Justification:} 
+    Elderly populations are more sensitive to extreme heat and heat waves\textsuperscript{\cite{cdc_heat}}. A higher number of households indicates a larger population at risk, increasing overall vulnerability. Conversely, higher household income enables greater access to resources like air conditioning, helping to mitigate the effects of extreme heat.
+    %https://www.cdc.gov/heat-health/risk-factors/heat-and-older-adults-aged-65.html
+    We cannot comprehensively analyze all other variables that play an arbitrarily small role in calculating vulnerability. 
+\end{itemize}
+
+\subsubsection*{3.2-3. The poverty line is \$36,777}
+\begin{itemize}
+    \item \textbf{Justification:} The national average household consisted of about 3 people in 2023\textsuperscript{\cite{statista_household}}.
+    %https://www.statista.com/statistics/183648/average-size-of-households-in-the-us/
+    %https://www.tn.gov/content/dam/tn/mentalhealth/documents/FPL_Guide_2025.pdf
+    The 2025 federal poverty levels for Tennessee residents of a household of 3 is \$36,777\textsuperscript{\cite{tn_fpl}}
+\end{itemize}
+
+\subsection*{3.3 The Model}
+\subsubsection*{3.3-1 Model Development}
+We first examined various factors to determine their correlations with heat vulnerability using multivariate linear regression. Our dataset spanned multiple years and contained information on environmental conditions, socioeconomic factors, and demographic characteristics. Some variables had missing values, so we used imputation techniques to fill in the gaps. We used Python to import and clean the data, ensuring that all variables were properly formatted and scaled. We choose our variables in accordance with their theoretical relevance to heat vulnerability. 
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|l|c|}
+        \hline
+        \textbf{Symbol} & \textbf{Variable} & \textbf{Unit} \\ 
+        \hline
+        $EP$ & Elderly Population (proportion of households with one or more aged 65+) & decimal \\ 
+        \hline
+        $H$ & Number of Households (relative to total number of households) & decimal \\ 
+        \hline
+        $MI$ & Median Household Income (relative to poverty line) & decimal \\
+        \hline
+    \end{tabular}
+    \caption{Final Variables in Vulnerability Scoring Model}
+    \label{tab:variables}
+\end{table}
+\\
+The final model is represented by the following equation:
+\begin{equation}
+V = \sum_{i=1}^{n} \beta_i X_i
+\end{equation}
+where:
+\begin{itemize}
+    \item \( V \) is the vulnerability score,
+    \item \( \beta_i \) are the regression coefficients indicating the contribution of each factor,
+    \item \( X_i \) represents the independent variables (e.g., elderly population, income, urbanization, etc.),
+\end{itemize}
+
+\subsubsection*{3.3-2 Model Execution}
+We used Python's seaborn libarary to make a correlation heatmap, which is then used to determine the value of each coefficient $\beta_i$, detailed in this table:
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|l|c|}
+        \hline
+        \textbf{Symbol} & \textbf{Variable} & \textbf{Coefficient} \\ 
+        \hline
+        $EP$ & Elderly Population (fraction of individuals aged 65+) & +0.8\\ 
+        \hline
+        $H$ & Number of Households (relative to total number of households) & +0.78\\ 
+        \hline
+        $MI$ & Median Household Income (relative to poverty line) & -0.8 \\
+        \hline
+    \end{tabular}
+    \caption{Final Ridge Regression Coefficients for Vulnerability Model}
+    \label{tab:coefficients}
+\end{table}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{correlation_heatmap.png}  % Change filename to actual path
+    \caption{Updated Correlation Heatmap of Vulnerability Factors and Mortality Rate}
+    \label{fig:correlation_heatmap}
+\end{figure}
+This can be applied to several neighborhoods. For Downtown / South Main Arts District / South Bluffs, its vulnerability score is 
+\[ V = 0.8EP + 0.78H - 0.8MI\]
+\[ V = 0.8\left(\frac{922}{8020}\right) + 0.78\left( \frac{8020}{282,116} \right) -0.8\left( \frac{75763}{36,777}\right) \approx -1.534\]
+\begin{table}[h]
+\centering
+
+
+\begin{tabular}{lr}
+\toprule
+                                      Neighborhood &  Vulnerability Score \\
+\midrule
+Downtown / South Main Arts District / South Bluffs &               -1.534 \\
+Lakeland / Arlington / Brunswick &               -2.229 \\
+Collierville / Piperton &               -2.663 \\
+Cordova, Zipcode 1 &               -1.397 \\
+Cordova, Zipcode 2 &               -1.716 \\
+Hickory Withe &               -2.959 \\
+Oakland &               -1.542 \\
+Rossville &               -1.906 \\
+East Midtown / Central Gardens / Cooper Young &               -1.020 \\
+Uptown / Pinch District &               -0.450 \\
+South Memphis &               -0.332 \\
+North Memphis / Snowden / New Chicago &               -0.577 \\
+Hollywood / Hyde Park / Nutbush &               -0.484 \\
+Coro Lake / White Haven &               -0.431 \\
+East Memphis – Colonial Yorkshire &               -0.883 \\
+Midtown / Evergreen / Overton Square &               -0.886 \\
+East Memphis &               -1.746 \\
+Windyke / Southwind &               -1.616 \\
+South Forum / Washington Heights &               -0.458 \\
+Frayser &               -0.557 \\
+Egypt / Raleigh &               -0.708 \\
+Bartlett, Zipcode 1 &               -1.595 \\
+Bartlett, Zipcode 2 &               -1.097 \\
+Bartlett, Zipcode 3 &               -1.734 \\
+Germantown, Zipcode 1 &               -2.436 \\
+Germantown, Zipcode 2 &               -3.458 \\
+South Riverdale &               -1.222 \\
+\bottomrule
+\end{tabular}
+\caption{Final Vulnerability Scores for All Neighborhoods}
+\label{tab:all_vulnerability_scores}
+\end{table}
+Officials can use vulnerability scores to prioritize resource allocation during heat waves by deploying cooling centers, targeted emergency alerts, and medical outreach in high-risk neighborhoods (scores near 0). Additionally, they can implement long-term urban planning strategies, such as expanding green spaces and subsidizing energy costs, to improve resilience in these most vulnerable areas.
+
+\subsubsection*{Strengths}
+A strength of this model is that it provides a data-driven approach to identifying and prioritizing vulnerable areas, allowing officials to efficiently allocate resources and mitigate heat-related risks. Additionally, by incorporating multiple socioeconomic and environmental factors, it captures a holistic view of vulnerability rather than relying on a single indicator
+\subsubsection*{Weaknesses}
+However, a weakness is that the model depends on accurate and up-to-date data, and any missing or outdated information can skew results. Additionally, while the model provides relative vulnerability rankings, it does not account for individual adaptive behaviors or localized microclimate variations, which could impact actual heat exposure. It also relies on only 3 variables, when in reality almost every single variable across all the datasets have some sort of contribution in the vulnerability calculation.
+
+\section*{Conclusion}
+Through our investigations, we found out that heat accumulation caused indoor temperatures to peak at 107.5°F at 2 PM and remain elevated into the evening due to residual heat. The comprehensive modeling approach reveals that Memphis must prepare for a projected 28\% increase in summer peak power demand over the next 20 years, with focused attention on population growth impacts and the disproportionate effects of extreme heat events. Finally, our integrated modeling approach offers a data-driven framework for heat wave mitigation, highlighting the urgent need for infrastructure planning, targeted interventions, and climate resilience strategies to protect vulnerable populations.
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+
+\begin{thebibliography}{9}
+
+
+
+
+\bibitem{mathworks_modeling} MathWorks Math Modeling Challenge. (2025). for\_all [Google Sheets]. Retrieved March 2, 2025, from\href{https://docs.google.com/spreadsheets/d/1kip_BlIm6c4gTRA5LgyY2TOzIOMlSdcvhSxbnHRPv_c/edit?gid=211276598\#gid=211276598} https://docs.google.com/spreadsheets/d/1kip\_BlIm6c4gTRA5LgyY2TOzIOMlSdcvhSxbnHRPv\_c/edit?\\
+gid=211276598\#gid=211276598
+
+\bibitem{forestry} Forestry Innovation Investment. (2024, September 17). Wood’s thermal performance | Building \& construction | naturally:wood. Naturally:wood.\href{https://www.naturallywood.com/wood-performance/thermal-performance/}{ https://www.naturallywood.com/wood-performance/thermal-performance/}
+
+\bibitem{wildfires} Semuels, A. (2021, June 2). Wildfires are getting worse, so why is the U.S. still building homes with wood? Time.\href{https://time.com/6046368/wood-steel-houses-fires/}{ https://time.com/6046368/wood-steel-houses-fires/ }
+
+\bibitem{windows} Staff, E. (2017, February 28). Survey: Multi-pane windows now on 59 percent of homes. Door and Window Market Magazine.\href{https://www.dwmmag.com/2017/02/28/survey-multi-pane-windows-now-on-59-percent-of-homes/}{ https://www.dwmmag.com/2017/02/28/survey-multi-pane-windows-now-on-59-percent-of-homes/ }
+
+\bibitem{energy} U.S. Department of Energy. (n.d.). Energy performance ratings for windows, doors, and skylights. Energy.gov.\href{https://www.energy.gov/energysaver/energy-performance-ratings-windows-doors-and-skylights}{ https://www.energy.gov/energysaver/energy-performance-ratings-windows-doors-and-skylights }
+
+\bibitem{dew_point} Paroscientific, Inc. (n.d.). MET4 and MET4A calculation of dew point. Retrieved March 2, 2025, from\href{https://www.cocoswebdevelopment.com/pdf/Calculating-Dew-Point.pdf}{ https://www.cocoswebdevelopment.com/pdf/Calculating-Dew-Point.pdf }
+
+\bibitem{fred} Federal Reserve Economic Data (FRED). (n.d.). Square foot. Retrieved from\href{https://fred.stlouisfed.org/series/MEDSQUFEE32820}{ https://fred.stlouisfed.org/series/MEDSQUFEE32820 }
+
+\bibitem{monetary} U.S. Census Bureau. (n.d.). Monetary status. Retrieved from\href{https://data.census.gov/table/ACSDP5Y2023.DP03?g=040XX00US47&tid=ACSDP5Y2023.DP03}{ https://data.census.gov/table/ACSDP5Y2023.DP03?\\
+g=040XX00US47
+\&tid=ACSDP5Y2023.DP03 }
+
+\bibitem{electric} U.S. Energy Information Administration (EIA). (n.d.). Electricity usage - megawatts. Retrieved from\href{https://www.eia.gov/electricity/gridmonitor/dashboard/electric_overview/balancing_authority/TVA}{ https://www.eia.gov/electricity/gridmonitor/dashboard/electric\_overview/balancing\_authority/TVA }
+
+\bibitem{EIA} U.S. Energy Information Administration (EIA). (n.d.). Known issues. Retrieved from\href{https://www.eia.gov/electricity/gridmonitor/knownissues/xls/Region_TEN.xlsx}{ https://www.eia.gov/electricity/gridmonitor/knownissues/xls/Region\_TEN.xlsx }
+
+\bibitem{greenspace}Rosencrantz, E. (2019). Urban greenspace and its impact on human health: A review of evidence. \textit{Environmental Research and Public Health, 16}(23), 4521.\href{https://pmc.ncbi.nlm.nih.gov/articles/PMC6888315/}{ https://pmc.ncbi.nlm.nih.gov/articles/PMC6888315/ }
+
+\bibitem{climatology} East Tennessee State University. (n.d.). Tennessee climatology. Retrieved March 2, 2025, from\href{https://www.etsu.edu/cas/geosciences/tn-climate/tn-climatology.php}{ https://www.etsu.edu/cas/geosciences/tn-climate/tn-climatology.php }
+
+\bibitem{public_land} The Trust for Public Land. (n.d.). \textit{Memphis, TN park access report}. Retrieved March 2, 2025, from\href{https://parkserve.tpl.org/downloads/pdfs/Memphis_TN.pdf}{ https://parkserve.tpl.org/downloads/pdfs/Memphis\_TN.pdf }
+
+\bibitem{point2homes} Point2Homes. (n.d.). Memphis, TN demographics. Retrieved March 2, 2025, from\href{https://www.point2homes.com/US/Neighborhood/TN/Memphis-Demographics.html}{ https://www.point2homes.com/US/Neighborhood/TN/Memphis-Demographics.html}
+
+\bibitem{cdc_heat}
+Centers for Disease Control and Prevention. "Heat and Older Adults Aged 65+." \textit{CDC}, 2023, 
+\url{https://www.cdc.gov/heat-health/risk-factors/heat-and-older-adults-aged-65.html}. Accessed 2 Mar. 2025.
+
+
+\bibitem{statista_household}
+Statista. "Average Size of Households in the U.S." \textit{Statista}, 2024, 
+\url{https://www.statista.com/statistics/183648/average-size-of-households-in-the-us/}. Accessed 2 Mar. 2025.
+
+\bibitem{tn_fpl}
+Tennessee Department of Mental Health and Substance Abuse Services. "Federal Poverty Level Guide 2025." \textit{Tennessee Government}, 2025, 
+\url{https://www.tn.gov/content/dam/tn/mentalhealth/documents/FPL_Guide_2025.pdf}. Accessed 2 Mar. 2025.
+\end{thebibliography}
+
+
+
+
+
+\section*{Code}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{PNG image 2.png}
+    \label{fig:enter-label}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{image.png}
+    
+    \label{fig:enter-label}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{image (2).png}
+    \label{fig:enter-label}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{image (3).png}
+    \label{fig:enter-label}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{image (4).png}
+    
+    \label{fig:enter-label}
+\end{figure}
+
+\end{document}
